@@ -1,35 +1,22 @@
 CC = gcc
-CFLAGS = -Wall -Werror
-SRC_DIR = .
-SERVER_DIR = Serveur
-CLIENT_DIR = Client
-OBJ_DIR = obj
+CFLAGS = -Wall
 BIN_DIR = bin
 
-SOURCES = $(wildcard $(SRC_DIR)/*.c)
-SERVER_SOURCES = $(wildcard $(SERVER_DIR)/*.c)
-CLIENT_SOURCES = $(wildcard $(CLIENT_DIR)/*.c)
-OBJECTS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
-SERVER_OBJECTS = $(patsubst $(SERVER_DIR)/%.c, $(OBJ_DIR)/%.o, $(SERVER_SOURCES))
-CLIENT_OBJECTS = $(patsubst $(CLIENT_DIR)/%.c, $(OBJ_DIR)/%.o, $(CLIENT_SOURCES))
-EXECUTABLE = $(BIN_DIR)/awale
+SERVER_SOURCES = Serveur/server2.c
+CLIENT_SOURCES = Client/client2.c
+
+SERVER_EXECUTABLE = $(BIN_DIR)/server2.exe
+CLIENT_EXECUTABLE = $(BIN_DIR)/client2.exe
 
 .PHONY: all clean
 
-all: $(EXECUTABLE)
+all: $(SERVER_EXECUTABLE) $(CLIENT_EXECUTABLE)
 
-$(EXECUTABLE): $(OBJECTS) $(SERVER_OBJECTS) $(CLIENT_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^
+$(SERVER_EXECUTABLE): $(SERVER_SOURCES)
+	$(CC) $(CFLAGS) -o $@ $<
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-$(OBJ_DIR)/%.o: $(SERVER_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-$(OBJ_DIR)/%.o: $(CLIENT_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+$(CLIENT_EXECUTABLE): $(CLIENT_SOURCES)
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f $(OBJ_DIR)/*.o
-	rm -f $(EXECUTABLE)
+	rm -f $(BIN_DIR)/*.exe
