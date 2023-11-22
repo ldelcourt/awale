@@ -10,6 +10,14 @@ struct player {
   int score;
 };
 
+struct awale {
+  struct player* player1;
+  struct player* player2;
+  int currentPlayer;
+  int endOfGame;
+  int gameState[12];
+};
+
 struct player* player1;
 struct player* player2;
 int currentPlayer = 1;

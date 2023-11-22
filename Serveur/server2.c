@@ -35,7 +35,7 @@ static void app(void)
    int max = sock;
    /* an array for all clients */
    Client clients[MAX_CLIENTS];
-
+   //Game** currentGames;
    fd_set rdfs;
 
    while(1)
@@ -95,6 +95,7 @@ static void app(void)
          strncpy(c.name, buffer, BUF_SIZE - 1);
          clients[actual] = c;
          actual++;
+         sendMenu(csock);
       }
       else
       {
@@ -227,6 +228,15 @@ static void write_client(SOCKET sock, const char *buffer)
    }
 }
 
+static void sendMenu(SOCKET sock) {
+   write_client(sock, "Bienvenue sur Awale, que voulez vous faire ?\n");
+   write_client(sock, "1. Voir la liste des pseudos en ligne\n");
+   write_client(sock, "2. Défier un autre joueur\n");
+   write_client(sock, "3. (Observer une partie)\n");
+   write_client(sock, "4. Voir les règles du jeu\n");
+   write_client(sock, "5. Voir l'historique des parties\n");
+   write_client(sock, "0. Se déconnecter\n");
+}
 int main(int argc, char **argv)
 {
    init();
