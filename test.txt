@@ -1,0 +1,9 @@
+  11 10  9  8  7  6
+---------------------
+|  1  3  2  4  5  4 |       Score 
+|  2  4  1  4  2  3 |       Pseudo 1: 21 - Pseudo 2: 12
+---------------------
+   0  1  2  3  4  5
+
+Joueur 1: 
+Entrez un chiffre entre 1 et 6 (ou 7 et 12 en fonction du joueur)
