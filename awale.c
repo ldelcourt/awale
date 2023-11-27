@@ -3,6 +3,7 @@
 #define ERR_TILE_NUMBER 2
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "awale.h"
 
@@ -28,7 +29,7 @@ Awale initGame(char* player1Name, char* player2Name) {
 
 }
 
-void printGameState() {
+/*void printGameState() {
   printf("\n\n  11 10  9  8  7  6\n");
   printf("---------------------\n| ");
   for(int i = 11; i > 5; i--) {
@@ -43,6 +44,44 @@ void printGameState() {
     printf("%d ", gameState[i]);
   }
   printf("|       Player 1: %d - Player 2: %d\n---------------------\n   0  1  2  3  4  5\n\n", player1->score, player2->score);
+  printf("Player %d to play\n", currentPlayer);
+}*/
+
+void printGameState() {
+  char * gameBoard;
+  strcat(gameBoard, "\n\n  11 10  9  8  7  6\n");
+  strcat(gameBoard, "---------------------\n| ");
+
+  char temp[4];
+  
+  for(int i = 11; i > 5; i--) {
+    if (gameState[i] < 10){
+      snprintf(temp, sizeof(temp), " %d ", gameState[i]);
+      strcat(gameBoard, temp);
+    } else {
+      snprintf(temp, sizeof(temp), "%d ", gameState[i]);
+      strcat(gameBoard, temp);
+    }
+  }
+  strcat(gameBoard,"|       Score\n| ");
+  for(int i = 0; i <6; i++) {
+    if (gameState[i] < 10){
+      snprintf(temp, sizeof(temp), " %d ", gameState[i]);
+      strcat(gameBoard, temp);
+    } else {
+      snprintf(temp, sizeof(temp), "%d ", gameState[i]);
+      strcat(gameBoard, temp);
+    }
+
+  }
+  strcat(gameBoard, "|       Player 1: ");
+  snprintf(temp, sizeof(temp), " %d ", player1->score);
+  strcat(gameBoard, temp);
+  strcat(gameBoard, "- Player 2: ");
+  snprintf(temp, sizeof(temp), " %d ", player2->score);
+  strcat(gameBoard, temp);
+  strcat(gameBoard, "\n---------------------\n   0  1  2  3  4  5\n\n");
+  printf(gameBoard);
   printf("Player %d to play\n", currentPlayer);
 }
 
