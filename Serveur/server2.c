@@ -93,6 +93,7 @@ static void app(void)
 
          Client c = { csock };
          strncpy(c.name, buffer, BUF_SIZE - 1);
+         c.state = IN_MENU;
          clients[actual] = c;
          actual++;
          sendMenu(csock);
@@ -118,6 +119,38 @@ static void app(void)
                }
                else
                {
+                  if(client.state == IN_MENU) {
+                     switch (atoi(buffer))
+                     {
+                     case 1:
+                        sendPlayersList(c);
+                        break;
+                     case 2:
+                        sendAvailablePlayersList(c);
+                        clients[i].state = DEFYING;
+                        break;
+                     case 3:
+                        write_client(client.sock, "Cette fonction n'est pas encore implémentée\r\n");
+                        sendMenu(client.sock);
+                        break;
+                     case 4:
+                        sendRules(client.sock);
+                        clients[i].state = READING_RULES;
+                        break;
+                     case 5:
+                        write_client(client.sock, "Cette fonction sera implémentée sous peu\r\n");
+                        sendMenu(client.sock);
+                        break;
+                     case 0:
+
+                        break;
+                     
+                     default:
+                        write_client(client.sock, "Commande invalide, veuillez réessayer\r\n");
+                        sendMenu(client.sock);
+                        break;
+                     }
+                  }
                   send_message_to_all_clients(clients, client, actual, buffer, 0);
                }
                break;
@@ -237,6 +270,16 @@ static void sendMenu(SOCKET sock) {
    write_client(sock, "5. Voir l'historique des parties\n");
    write_client(sock, "0. Se déconnecter\n");
 }
+
+static void sendPlayersList(SOCKET sock);
+static void sendAvailablePlayersList(SOCKET sock);
+static void sendRules(SOCKET sock){
+   write_client(sock, "Regles de l'Awale :\n");
+   write_client(sock, "blablabla...\n\n");
+   write_client(sock, "1. Retour menu\n");
+   write_client(sock, "0. Se déconnecter\n");
+}
+
 int main(int argc, char **argv)
 {
    init();
