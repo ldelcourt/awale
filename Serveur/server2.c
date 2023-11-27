@@ -189,7 +189,7 @@ static void app(void)
                      Client * adversaire = pseudoValid(buffer, clients);
                      if(adversaire != NULL){
                         //Defier l'adversaire
-                        Game * game = createGame(&clients[i], adversaire, games, numberOfGames);
+                        Game * game = createGame(&clients[i], adversaire, games, &numberOfGames);
                         char* message = client.name;
                         strcat(message, " vous défie vous pouvez accepter (1) ou refuser (2)\n");
                         printf("Le nom du client est %s, et le message %s\n", client.name, message);
@@ -402,11 +402,38 @@ static void sendRules(SOCKET sock){
 
 static Client * pseudoValid(char* buffer, Client* clients) { return NULL; };
 
-static Game * createGame(Client * player1, Client * player2, Game* games, int numberOfGames) {
-   return NULL;
+static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames) {
+   /* Initialize the game */
+   games[(*numberOfGames)].player1 = player1;
+   games[(*numberOfGames)].player2 = player2;
+   games[(*numberOfGames)].awale = initGame(player1->name, player2->name);
+
+   /* Increase the number of total games */
+   (*numberOfGames)++;
+
+   /* Set the client status accordingly */
+   player1->state = WAITING;
+   player2->state = DEFIED;
+
+   /* Return a pointer to the game */
+   return &games[(*numberOfGames) - 1];
 }
 
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames) {
+   Game * game = getGameByClient(defiedClient, games, numberOfGames);
+   game->player1->state = IN_GAME_PLAYER_1;
+   game->player2->state = IN_GAME_PLAYER_2;
+   const char * gameState = printGameState(game->awale);
+   write_client(game->player1->sock, gameState);
+   write_client(game->player2->sock, gameState);
+
+   return game;
+}
+
+static Game * getGameByClient(Client * client, Game * games, int numberOfGames) {
+   for(int i = 0; i < numberOfGames; i ++) {
+      if (games[i].player2 == client || games[i].player1 == client) return &games[i];
+   }
    return NULL;
 }
 

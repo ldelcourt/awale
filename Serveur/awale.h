@@ -17,11 +17,12 @@ typedef struct {
   int gameState[12];
 } Awale;
 
-void initGame(char* player1Name, char* player2Name);
-void printGameState();
-int checkLegalMove(int playerNumber, int tile);
-void moveSeeds(int tile);
-int checkEndGame();
-int playTurn(int tile);
+Awale initGame(char* player1Name, char* player2Name);
+char * printGameState(Awale game);
+int checkLegalMove(int playerNumber, int tile, Awale game);
+void moveSeeds(int tile, Awale game);
+int checkEndGame(Awale game);
+int playTurn(int tile, Awale game);
+void closeGame(Awale game);
 
 #endif /* AWALE_H */

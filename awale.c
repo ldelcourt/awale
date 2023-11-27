@@ -4,40 +4,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct player {
-  int playerNumber;
-  char* playerName;
-  int score;
-};
+#include "awale.h"
 
-struct awale {
-  struct player* player1;
-  struct player* player2;
-  int currentPlayer;
-  int endOfGame;
-  int gameState[12];
-};
 
-struct player* player1;
-struct player* player2;
-int currentPlayer = 1;
-int endOfGame = false;
-int gameState[12];
+Awale initGame(char* player1Name, char* player2Name) {
 
-void initGame(char* player1Name, char* player2Name) {
-  player1 = (struct player*)malloc(sizeof(struct player));
+  Player *player1 = (Player *)malloc(sizeof(Player));
   player1->playerName = player1Name;
   player1->playerNumber = 1;
   player1->score = 0;
 
-  player2 = (struct player*)malloc(sizeof(struct player));
+  Player *player2 = (Player *)malloc(sizeof(Player));
   player2->playerName = player2Name;
   player2->playerNumber = 2;
   player2->score = 0;
 
+  int * gameState = (int *)malloc(sizeof(int)*12);
   for(int i = 0; i < 12; i++) {
     gameState[i] = 3;
   }
+  Awale game = { player1, player2, 1, false, gameState };
+  return game;
+
 }
 
 void printGameState() {
