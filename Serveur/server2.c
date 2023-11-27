@@ -35,7 +35,10 @@ static void app(void)
    int max = sock;
    /* an array for all clients */
    Client clients[MAX_CLIENTS];
-   //Game** currentGames;
+   /* An Array of all current Awale Games */
+   Game games[MAX_GAMES];
+   int numberOfGames = 0;
+
    fd_set rdfs;
 
    while(1)
@@ -183,9 +186,15 @@ static void app(void)
                   }
 
                   if(client.state == DEFYING) {
-                     int adversaire = pseudoValid(buffer, clients);
-                     if(adversaire != -1){
+                     Client * adversaire = pseudoValid(buffer, clients);
+                     if(adversaire != NULL){
                         //Defier l'adversaire
+                        Game * game = createGame(&clients[i], adversaire, games, numberOfGames);
+                        char* message = client.name;
+                        strcat(message, " vous défie vous pouvez accepter (1) ou refuser (2)\n");
+                        printf("Le nom du client est %s, et le message %s\n", client.name, message);
+                        adversaire->state = DEFIED;
+                        write_client(adversaire->sock, message);
                      }
 
                      switch (atoi(buffer))
@@ -207,6 +216,22 @@ static void app(void)
                      }
                   }
 
+                  if (client.state == DEFIED) {
+                     switch (atoi(buffer))
+                     {
+                     case 1:
+                        acceptGame(&clients[i], games, numberOfGames);
+                        break;
+                     case 2:
+                        clients[i].state = IN_MENU;
+                        sendMenu(client.sock);
+                        break;
+                     
+                     default:
+                        write_client(client.sock, "Commande invalide, choisissez d'accepter (1) ou de refuser (2)\r\n\n");
+                        break;
+                     }
+                  }
                   //send_message_to_all_clients(clients, client, actual, buffer, 0);
                
                }
@@ -375,7 +400,15 @@ static void sendRules(SOCKET sock){
    write_client(sock, "Gagnant : Le joueur qui a capturé le plus de graines à la fin de la partie est déclaré vainqueur.\n\n");
 }
 
-static int pseudoValid(char* buffer, Client* clients) { return -1; };
+static Client * pseudoValid(char* buffer, Client* clients) { return NULL; };
+
+static Game * createGame(Client * player1, Client * player2, Game* games, int numberOfGames) {
+   return NULL;
+}
+
+static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames) {
+   return NULL;
+}
 
 int main(int argc, char **argv)
 {

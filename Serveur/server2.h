@@ -42,6 +42,7 @@ typedef struct in_addr IN_ADDR;
 #define CRLF        "\r\n"
 #define PORT         1977
 #define MAX_CLIENTS     100
+#define MAX_GAMES   50
 
 #define BUF_SIZE    1024
 
@@ -69,5 +70,7 @@ static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendRules(SOCKET sock);
 static int pseudoValid(char* buffer, Client* clients);
+static Game * createGame(Client * player1, Client * player2, Game* games, int numberOfGames);
+static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
 
 #endif /* guard */

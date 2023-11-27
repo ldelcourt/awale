@@ -3,13 +3,13 @@
 
 #define ERR_TILE_NUMBER 2
 
-typedef struct player {
+typedef struct {
   int playerNumber;
   char* playerName;
   int score;
 } Player;
 
-typedef struct awale {
+typedef struct {
   Player* player1;
   Player* player2;
   int currentPlayer;

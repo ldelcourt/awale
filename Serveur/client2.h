@@ -6,7 +6,9 @@
 #define IN_GAME_PLAYER_2 2
 #define OBSERVATEUR 3
 #define DEFYING 4
-#define READING_RULES 5
+#define DEFIED 5
+#define WAITING 6
+#define READING_RULES 7
 
 #include "server2.h"
 #include "awale.h"
