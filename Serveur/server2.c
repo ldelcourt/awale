@@ -150,8 +150,53 @@ static void app(void)
                         sendMenu(client.sock);
                         break;
                      }
+
+
+                     if(client.state == READING_RULES) {
+                     switch (atoi(buffer))
+                     {
+                     case 1:
+                        sendMenu(client.sock);
+                        clients[i].state = IN_MENU;
+                        break;
+                     case 0:
+
+                        break;
+                     
+                     default:
+                        write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
+                        write_client(client.sock, "1. Retour menu\n");
+                        write_client(client.sock, "0. Se déconnecter\n");
+      
+                        break;
+                     }
+
+                     if(client.state == DEFYING) {
+                        Client adversaire = pseudoValid(buffer, clients);
+                        if(adversaire != NULL){
+
+                        }
+
+                        switch (atoi(buffer))
+                        {
+                        case 1:
+                           sendMenu(client.sock);
+                           clients[i].state = IN_MENU;
+                           break;
+                        case 0:
+
+                           break;
+                        
+                        default:
+                           write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
+                           write_client(client.sock, "1. Retour menu\n");
+                           write_client(client.sock, "0. Se déconnecter\n");
+         
+                           break;
+                     }
+
                   }
-                  send_message_to_all_clients(clients, client, actual, buffer, 0);
+                  //send_message_to_all_clients(clients, client, actual, buffer, 0);
                }
                break;
             }
@@ -279,6 +324,8 @@ static void sendRules(SOCKET sock){
    write_client(sock, "1. Retour menu\n");
    write_client(sock, "0. Se déconnecter\n");
 }
+
+static Client pseudoValid(char* buffer, Client* clients);
 
 int main(int argc, char **argv)
 {
