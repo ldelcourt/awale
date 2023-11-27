@@ -122,14 +122,18 @@ static void app(void)
                }
                else
                {
+                  /* Gestion d'un client dans le Menu */
                   if(client.state == IN_MENU) {
                      switch (atoi(buffer))
                      {
+                     /* 1. Afficher la liste des clients en ligne */
                      case 1:
                         sendPlayersList(client.sock, clients, actual);
                         write_client(client.sock, "6. Retour menu\n");
                         write_client(client.sock, "0. Se déconnecter\n");
                         break;
+
+                     /* 2. Défier un autre joueur */
                      case 2:
                         sendAvailablePlayersList(client.sock, clients, actual);
                         write_client(client.sock, "Entrez le pseudo de la personne que vous souhaitez defier\n\n");
@@ -137,25 +141,29 @@ static void app(void)
                         write_client(client.sock, "0. Se déconnecter\n");
                         clients[i].state = DEFYING;
                         break;
+                     /* 3. Observer une partie */
                      case 3:
                         write_client(client.sock, "Cette fonction n'est pas encore implémentée\r\n");
                         sendMenu(client.sock);
                         break;
+                     /* 4. Lire les règles du jeu */
                      case 4:
                         sendRules(client.sock);
                         write_client(sock, "6. Retour menu\n");
                         write_client(sock, "0. Se déconnecter\n");
                         clients[i].state = READING_RULES;
                         break;
+                     /* 5. Voir l'historique des parties jouée */
                      case 5:
                         write_client(client.sock, "Cette fonction sera implémentée sous peu\r\n");
                         sendMenu(client.sock);
                         break;
+                     /* 6. Retour au menu */
                      case 6:
                         sendMenu(client.sock);
                         break;
+                     /* 0. Déconnection d'un joueur */
                      case 0:
-
                         break;
                      
                      default:
@@ -164,7 +172,7 @@ static void app(void)
                         break;
                      }
                   }
-
+                  /* Gestion du cas d'un joueur qui lit les règles */
                   if(client.state == READING_RULES) {
                      switch (atoi(buffer))
                      {
@@ -185,17 +193,22 @@ static void app(void)
                      }
                   }
 
+                  /* Gestion d'un joueur qui choisi de défier un autre joueur */
                   if(client.state == DEFYING) {
-                     Client * adversaire = pseudoValid(buffer, clients);
+                     char messageRetour[1024];
+                     Client * adversaire = pseudoValid(buffer, clients, actual, messageRetour);
                      if(adversaire != NULL){
                         //Defier l'adversaire
-                        Game * game = createGame(&clients[i], adversaire, games, &numberOfGames);
+                        createGame(&clients[i], adversaire, games, &numberOfGames);
                         char* message = client.name;
                         strcat(message, " vous défie vous pouvez accepter (1) ou refuser (2)\n");
                         printf("Le nom du client est %s, et le message %s\n", client.name, message);
                         adversaire->state = DEFIED;
                         write_client(adversaire->sock, message);
+                        write_client(client.sock, messageRetour);
+                        continue;
                      }
+                     
 
                      switch (atoi(buffer))
                      {
@@ -208,7 +221,7 @@ static void app(void)
                         break;
                      
                      default:
-                        write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
+                        write_client(client.sock, messageRetour);
                         write_client(client.sock, "6. Retour menu\n");
                         write_client(client.sock, "0. Se déconnecter\n");
       
@@ -216,6 +229,7 @@ static void app(void)
                      }
                   }
 
+                  /* Gestion du cas d'un joueur défié */
                   if (client.state == DEFIED) {
                      switch (atoi(buffer))
                      {
@@ -232,8 +246,45 @@ static void app(void)
                         break;
                      }
                   }
-                  //send_message_to_all_clients(clients, client, actual, buffer, 0);
-               
+
+                  /* Gestion d'une partie */
+                  if (client.state == IN_GAME_PLAYER_1 || client.state == IN_GAME_PLAYER_2) {
+                     Game * game = getGameByClient(&clients[i], games, numberOfGames);
+                     int tile = atoi(buffer);
+                     char message[4096];
+
+                     /* Si ce n'est pas au tour du joueur ou que le move n'est pas légal, on renvoie l'état du jeu au client */
+                     if (game->awale.currentPlayer != client.state || checkLegalMove(client.state, tile, &(game->awale)) == false) {
+                        printGameState(message, game->awale);
+                        game->awale.currentPlayer == client.state ?
+                           strcat(message, "A vous de jouer choisissez une case\r\n") :
+                           strcat(message, "En attente du joueur en face\r\n");
+                        write_client(game->player1->sock, message);
+                        write_client(game->player2->sock, message);
+                        continue;
+                     } 
+                     
+                     /* Si le move est légal on joue et puis on envoie le plateau aux deux joueurs */
+                     if(playTurn(&(game->awale)) != true) {
+                        printGameState(message, game->awale);
+                        SOCKET currentPlayerSock = game->awale.currentPlayer == IN_GAME_PLAYER_1 ?
+                           game->player1->sock : game->player2->sock;
+                        SOCKET otherPlayerSock = game->awale.currentPlayer != IN_GAME_PLAYER_1 ?
+                           game->player1->sock : game->player2->sock;
+                        write_client(otherPlayerSock, message);
+                        write_client(currentPlayerSock, strcat(message, "A vous de jouer\n"));
+                        continue;
+                     }
+                     
+                     /* Si c'est la fin de partie, on envoi le message pour savoir qui a gagné */
+                     char messageJoueur1[1024];
+                     char messageJoueur2[1024];
+                     endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1);
+                     endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2);
+                     write_client(game->player1->sock, messageJoueur1);
+                     write_client(game->player2->sock, messageJoueur2);
+                  }
+
                }
                break;
             }
@@ -400,7 +451,19 @@ static void sendRules(SOCKET sock){
    write_client(sock, "Gagnant : Le joueur qui a capturé le plus de graines à la fin de la partie est déclaré vainqueur.\n\n");
 }
 
-static Client * pseudoValid(char* buffer, Client* clients) { return NULL; };
+static Client * pseudoValid(const char* buffer, Client* clients, int nbClient, char * message) {
+   for(int i = 0; i < nbClient; i++) {
+      Client client = clients[i];
+      if(strcmp(client.name, buffer) != 0) continue;
+      strcat(message, buffer);
+      strcat(message, " défié en attente de réponse\n");
+      return &(clients[i]);
+   }
+   strcat(message, "Aucun joueur trouvé ne correspond au nom: ");
+   strcat(message, buffer);
+   strcat(message, "veuillez réessayer\n");
+   return NULL;
+};
 
 static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames) {
    /* Initialize the game */
@@ -423,7 +486,8 @@ static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames)
    Game * game = getGameByClient(defiedClient, games, numberOfGames);
    game->player1->state = IN_GAME_PLAYER_1;
    game->player2->state = IN_GAME_PLAYER_2;
-   const char * gameState = printGameState(game->awale);
+   char gameState[4096];
+   printGameState(gameState, game->awale);
    write_client(game->player1->sock, gameState);
    write_client(game->player2->sock, gameState);
 

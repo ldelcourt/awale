@@ -1,6 +1,3 @@
-#define true 1
-#define false 0
-#define ERR_TILE_NUMBER 2
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

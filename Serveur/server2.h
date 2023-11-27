@@ -69,8 +69,8 @@ static void sendMenu(SOCKET sock);
 static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendRules(SOCKET sock);
-static int pseudoValid(char* buffer, Client* clients);
-static Game * createGame(Client * player1, Client * player2, Game* games, int numberOfGames);
+static Client * pseudoValid(const char* buffer, Client* clients, int nbClients, char * message);
+static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames);
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
 static Game * getGameByClient(Client * client, Game * games, int numberOfGames);
 
