@@ -9,6 +9,7 @@
 #define READING_RULES 5
 
 #include "server2.h"
+#include "awale.h"
 
 typedef int CLIENT_STATE;
 

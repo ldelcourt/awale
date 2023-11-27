@@ -65,5 +65,9 @@ static void send_message_to_all_clients(Client *clients, Client client, int actu
 static void remove_client(Client *clients, int to_remove, int *actual);
 static void clear_clients(Client *clients, int actual);
 static void sendMenu(SOCKET sock);
+static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients);
+static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients);
+static void sendRules(SOCKET sock);
+static int pseudoValid(char* buffer, Client* clients);
 
 #endif /* guard */

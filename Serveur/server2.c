@@ -123,10 +123,15 @@ static void app(void)
                      switch (atoi(buffer))
                      {
                      case 1:
-                        sendPlayersList(c);
+                        sendPlayersList(client.sock, clients, actual);
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "0. Se déconnecter\n");
                         break;
                      case 2:
-                        sendAvailablePlayersList(c);
+                        sendAvailablePlayersList(client.sock, clients, actual);
+                        write_client(client.sock, "Entrez le pseudo de la personne que vous souhaitez defier\n\n");
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "0. Se déconnecter\n");
                         clients[i].state = DEFYING;
                         break;
                      case 3:
@@ -135,10 +140,15 @@ static void app(void)
                         break;
                      case 4:
                         sendRules(client.sock);
+                        write_client(sock, "6. Retour menu\n");
+                        write_client(sock, "0. Se déconnecter\n");
                         clients[i].state = READING_RULES;
                         break;
                      case 5:
                         write_client(client.sock, "Cette fonction sera implémentée sous peu\r\n");
+                        sendMenu(client.sock);
+                        break;
+                     case 6:
                         sendMenu(client.sock);
                         break;
                      case 0:
@@ -150,12 +160,12 @@ static void app(void)
                         sendMenu(client.sock);
                         break;
                      }
+                  }
 
-
-                     if(client.state == READING_RULES) {
+                  if(client.state == READING_RULES) {
                      switch (atoi(buffer))
                      {
-                     case 1:
+                     case 6:
                         sendMenu(client.sock);
                         clients[i].state = IN_MENU;
                         break;
@@ -165,38 +175,40 @@ static void app(void)
                      
                      default:
                         write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
-                        write_client(client.sock, "1. Retour menu\n");
+                        write_client(client.sock, "6. Retour menu\n");
                         write_client(client.sock, "0. Se déconnecter\n");
       
                         break;
                      }
+                  }
 
-                     if(client.state == DEFYING) {
-                        Client adversaire = pseudoValid(buffer, clients);
-                        if(adversaire != NULL){
-
-                        }
-
-                        switch (atoi(buffer))
-                        {
-                        case 1:
-                           sendMenu(client.sock);
-                           clients[i].state = IN_MENU;
-                           break;
-                        case 0:
-
-                           break;
-                        
-                        default:
-                           write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
-                           write_client(client.sock, "1. Retour menu\n");
-                           write_client(client.sock, "0. Se déconnecter\n");
-         
-                           break;
+                  if(client.state == DEFYING) {
+                     int adversaire = pseudoValid(buffer, clients);
+                     if(adversaire != -1){
+                        //Defier l'adversaire
                      }
 
+                     switch (atoi(buffer))
+                     {
+                     case 6:
+                        sendMenu(client.sock);
+                        clients[i].state = IN_MENU;
+                        break;
+                     case 0:
+
+                        break;
+                     
+                     default:
+                        write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "0. Se déconnecter\n");
+      
+                        break;
+                     }
                   }
+
                   //send_message_to_all_clients(clients, client, actual, buffer, 0);
+               
                }
                break;
             }
@@ -316,16 +328,54 @@ static void sendMenu(SOCKET sock) {
    write_client(sock, "0. Se déconnecter\n");
 }
 
-static void sendPlayersList(SOCKET sock);
-static void sendAvailablePlayersList(SOCKET sock);
+static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients) { 
+   write_client(sock, "Voici la liste des Joueurs connectés et de leur état\n");
+   for(int i = 0; i < numberOfClients; i ++) {
+      Client client = clients[i];
+      write_client(sock, client.name);
+      switch (client.state)
+      {
+      case IN_MENU:
+      case READING_RULES:
+      case DEFYING: 
+         write_client(sock, ": Disponible\n");
+         break;
+      case IN_GAME_PLAYER_1:
+      case IN_GAME_PLAYER_2:
+         write_client(sock, ": En partie\n");
+         break;
+      case OBSERVATEUR: 
+         write_client(sock, ": Regarde une partie\n");
+         break;
+      default:
+         break;
+      }
+   }
+};
+static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients) {
+   write_client(sock, "Voici la liste des Joueurs connectés que vous pouvez défier\n");
+   for(int i = 0; i < numberOfClients; i ++) {
+      Client client = clients[i];
+      if(client.sock == sock) continue;
+      if(client.state != IN_GAME_PLAYER_1 || client.state != IN_GAME_PLAYER_2 || client.state != OBSERVATEUR) {
+         write_client(sock, client.name);
+         write_client(sock, ": Disponible\n");
+      }
+   }
+};
+
 static void sendRules(SOCKET sock){
-   write_client(sock, "Regles de l'Awale :\n");
-   write_client(sock, "blablabla...\n\n");
-   write_client(sock, "1. Retour menu\n");
-   write_client(sock, "0. Se déconnecter\n");
+   write_client(sock, "Regles de l'Awale :\n\n");
+   write_client(sock, "Plateau de jeu : Awale se joue sur un plateau composé de deux rangées de six trous, appelés maisons, pour un total de 12 maisons.\n\n");
+   write_client(sock, "Pions : Chaque maison contient initialement 4 graines (ou pions). Ainsi, il y a un total de 48 graines au début du jeu.\n\n");
+   write_client(sock, "But du jeu : L'objectif est de capturer le plus grand nombre possible de graines. Le joueur qui a capturé le plus de graines à la fin du jeu remporte la partie.\n\n");
+   write_client(sock, "Déroulement du jeu : Les joueurs jouent à tour de rôle. Pendant son tour, un joueur prend toutes les graines d'une de ses maisons et les distribue une par une dans les maisons suivantes, dans le sens contraire des aiguilles d'une montre. Si la dernière graine atterrit dans une maison déjà occupée, le joueur continue de semer ses graines dans les maisons suivantes.\n\n");
+   write_client(sock, "Captures : Si la dernière graine d un joueur tombe dans une maison qui rend le nombre total de graines dans cette maison égal à 2 ou 3, le joueur capture ces graines. Il les retire du plateau et les place dans son propre 'banc' (une rangée spéciale à sa droite).\n\n");
+   write_client(sock, "Fin de la partie : Le jeu se termine lorsque l'un des joueurs ne peut plus jouer, c'est-à-dire lorsqu il ne reste plus de graines dans ses maisons. Le joueur qui a capturé le plus de graines dans son banc remporte la partie.\n\n");
+   write_client(sock, "Gagnant : Le joueur qui a capturé le plus de graines à la fin de la partie est déclaré vainqueur.\n\n");
 }
 
-static Client pseudoValid(char* buffer, Client* clients);
+static int pseudoValid(char* buffer, Client* clients) { return -1; };
 
 int main(int argc, char **argv)
 {
