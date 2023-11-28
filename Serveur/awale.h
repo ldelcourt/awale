@@ -16,15 +16,15 @@ typedef struct {
   Player* player2;
   int currentPlayer;
   int endOfGame;
-  int gameState[12];
+  int * gameState;
 } Awale;
 
 Awale initGame(char* player1Name, char* player2Name);
-void printGameState(const char * gameBoard, Awale game);
+void printGameState(char * gameBoard, Awale game);
 int checkLegalMove(int playerNumber, int tile, Awale * game);
 void moveSeeds(int tile, Awale * game);
 int checkEndGame(Awale * game);
-int playTurn(Awale * game);
+int playTurn(int tile, Awale * game);
 void endGameMessage(const char * message, Awale * game, int playerNumber);
 void closeGame(Awale * game);
 
