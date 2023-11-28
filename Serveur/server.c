@@ -113,11 +113,22 @@ static void app(void)
                /* client disconnected */
                if(c == 0 || atoi(buffer) == 21)
                {
+                  Game * playerGame = getGameByClient(&clients[i], games, numberOfGames);
+                  if (playerGame != NULL) {
+                     char message[4096];
+                     Client * opponent = client.sock == playerGame->player1->sock ?
+                           playerGame->player2 :
+                           playerGame->player1;
+                     endGameMessage(message, &(playerGame->awale), client.state == IN_GAME_PLAYER_1 ? 2 : 1, true);
+                     write_client(opponent->sock, message);
+                     sendMenu(opponent->sock);
+                     opponent->state = IN_MENU;
+                     closeGame(&(playerGame->awale));
+                  }
                   closesocket(clients[i].sock);
                   remove_client(clients, i, &actual);
                   strncpy(buffer, client.name, BUF_SIZE - 1);
                   strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
-                  send_message_to_all_clients(clients, client, actual, buffer, 1);
                }
                else
                {
@@ -278,8 +289,8 @@ static void app(void)
                      /* Si c'est la fin de partie, on envoi le message pour savoir qui a gagné */
                      char messageJoueur1[1024];
                      char messageJoueur2[1024];
-                     endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1);
-                     endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2);
+                     endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1, false);
+                     endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2, false);
                      write_client(game->player1->sock, messageJoueur1);
                      write_client(game->player2->sock, messageJoueur2);
                   }

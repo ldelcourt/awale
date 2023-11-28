@@ -25,7 +25,7 @@ int checkLegalMove(int playerNumber, int tile, Awale * game);
 void moveSeeds(int tile, Awale * game);
 int checkEndGame(Awale * game);
 int playTurn(int tile, Awale * game);
-void endGameMessage(const char * message, Awale * game, int playerNumber);
+void endGameMessage(char * message, Awale * game, int playerNumber, int deconnection);
 void closeGame(Awale * game);
 
 #endif /* AWALE_H */

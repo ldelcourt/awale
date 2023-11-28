@@ -139,7 +139,11 @@ int playTurn(int tile, Awale * game){
   return checkEndGame(game);
 }
 
-void endGameMessage(const char * message, Awale * game, int playerNumber) {
+void endGameMessage(char * message, Awale * game, int playerNumber, int deconnection) {
+  if (deconnection == true) {
+    strcat(message, "Your opponent disconnected, congrat you win !\r\n");
+    return;
+  }
   Player * player1 = game->player1;
   Player * player2 = game->player2;
   if (player1->score > player2->score) {
