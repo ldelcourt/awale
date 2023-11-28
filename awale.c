@@ -108,7 +108,7 @@ void moveSeeds(int tile, Awale * game) {
   
   //Gagner les graines
   int checkedTile = (tile + numberOfSeeds) % 12;
-  while (game->gameState[checkedTile] == 2 || game->gameState[checkedTile] == 3) {
+  while ((game->gameState[checkedTile] == 2 || game->gameState[checkedTile] == 3)&&(((game->currentPlayer ==1)&&(checkedTile>5))||((game->currentPlayer ==2)&&(checkedTile<6)))) {
     Player* player = game->currentPlayer == 1 ? game->player1 : game->player2;
     player->score += game->gameState[checkedTile];
     game->gameState[checkedTile] = 0;

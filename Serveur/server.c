@@ -201,7 +201,6 @@ static void app(void)
                         createGame(&clients[i], adversaire, games, &numberOfGames);
                         char* message = client.name;
                         strcat(message, " vous défie vous pouvez accepter (1) ou refuser (2)\n");
-                        printf("Le nom du client est %s, et le message %s\n", client.name, message);
                         adversaire->state = DEFIED;
                         write_client(adversaire->sock, message);
                         write_client(client.sock, messageRetour);
@@ -236,8 +235,7 @@ static void app(void)
                         acceptGame(&clients[i], games, numberOfGames);
                         break;
                      case 2:
-                        clients[i].state = IN_MENU;
-                        sendMenu(client.sock);
+                        refuseGame(&clients[i], games, numberOfGames);
                         break;
                      
                      default:
@@ -255,11 +253,8 @@ static void app(void)
                      /* Si ce n'est pas au tour du joueur ou que le move n'est pas légal, on renvoie l'état du jeu au client */
                      if (game->awale.currentPlayer != client.state || checkLegalMove(client.state, tile, &(game->awale)) == false) {
                         printGameState(message, game->awale);
-                        game->awale.currentPlayer == client.state ?
-                           strcat(message, "A vous de jouer choisissez une case\r\n") :
-                           strcat(message, "En attente du joueur en face\r\n");
-                        write_client(game->player1->sock, message);
-                        write_client(game->player2->sock, message);
+                        write_client(game->player1->sock, strcat(message, "A vous de jouer choisissez une case\r\n"));
+                        write_client(game->player2->sock, strcat(message, "En attente du joueur en face\r\n"));
                         continue;
                      } 
                      
@@ -492,6 +487,17 @@ static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames)
 
    return game;
 }
+
+static void refuseGame(Client * defiedClient, Game * games, int numberOfGames) {
+   Game * game = getGameByClient(defiedClient, games, numberOfGames);
+   game->player1->state = IN_MENU;
+   game->player2->state = IN_MENU;
+   SOCKET defiyingClientSocket = game->player1 == defiedClient ? game->player2->sock : game->player1->sock; 
+   write_client(defiyingClientSocket, "Your opponent declined the challenge #LOOSER");
+   sendMenu(game->player1->sock);
+   sendMenu(game->player2->sock);
+}
+
 
 static Game * getGameByClient(Client * client, Game * games, int numberOfGames) {
    for(int i = 0; i < numberOfGames; i ++) {

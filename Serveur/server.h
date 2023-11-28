@@ -73,6 +73,7 @@ static void sendRules(SOCKET sock);
 static Client * pseudoValid(const char* buffer, Client* clients, int nbClients, char * message);
 static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames);
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
+static void refuseGame(Client * defiedClient, Game * games, int numberOfGames);
 static Game * getGameByClient(Client * client, Game * games, int numberOfGames);
 
 #endif /* guard */
