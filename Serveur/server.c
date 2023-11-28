@@ -111,7 +111,7 @@ static void app(void)
                Client client = clients[i];
                int c = read_client(clients[i].sock, buffer);
                /* client disconnected */
-               if(c == 0)
+               if(c == 0 || atoi(buffer) == 21)
                {
                   closesocket(clients[i].sock);
                   remove_client(clients, i, &actual);
@@ -129,15 +129,15 @@ static void app(void)
                      case 1:
                         sendPlayersList(client.sock, clients, actual);
                         write_client(client.sock, "6. Retour menu\n");
-                        write_client(client.sock, "0. Se déconnecter\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
                         break;
 
                      /* 2. Défier un autre joueur */
                      case 2:
                         sendAvailablePlayersList(client.sock, clients, actual);
-                        write_client(client.sock, "Entrez le pseudo de la personne que vous souhaitez defier\n\n");
+                        write_client(client.sock, "\nEntrez le pseudo de la personne que vous souhaitez defier\n\n");
                         write_client(client.sock, "6. Retour menu\n");
-                        write_client(client.sock, "0. Se déconnecter\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
                         clients[i].state = DEFYING;
                         break;
                      /* 3. Observer une partie */
@@ -149,7 +149,7 @@ static void app(void)
                      case 4:
                         sendRules(client.sock);
                         write_client(sock, "6. Retour menu\n");
-                        write_client(sock, "0. Se déconnecter\n");
+                        write_client(sock, "21. Se déconnecter\n");
                         clients[i].state = READING_RULES;
                         break;
                      /* 5. Voir l'historique des parties jouée */
@@ -186,7 +186,7 @@ static void app(void)
                      default:
                         write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
                         write_client(client.sock, "6. Retour menu\n");
-                        write_client(client.sock, "0. Se déconnecter\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
       
                         break;
                      }
@@ -221,7 +221,7 @@ static void app(void)
                      default:
                         write_client(client.sock, messageRetour);
                         write_client(client.sock, "6. Retour menu\n");
-                        write_client(client.sock, "0. Se déconnecter\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
       
                         break;
                      }
@@ -253,8 +253,13 @@ static void app(void)
                      /* Si ce n'est pas au tour du joueur ou que le move n'est pas légal, on renvoie l'état du jeu au client */
                      if (game->awale.currentPlayer != client.state || checkLegalMove(client.state, tile, &(game->awale)) == false) {
                         printGameState(message, game->awale);
-                        write_client(game->player1->sock, strcat(message, "A vous de jouer choisissez une case\r\n"));
-                        write_client(game->player2->sock, strcat(message, "En attente du joueur en face\r\n"));
+                        char temp[4096]; 
+                        strcpy(temp, message);
+                        strcat(message, "A vous de jouer choisissez une case");
+                        strcat(message, game->awale.currentPlayer == 1 ? " entre 0 et 5\r\n" : " entre 6 et 11\r\n");
+                        strcat(temp, "En attente du joueur en face\r\n");
+                        write_client(game->player1->sock, game->awale.currentPlayer == 1 ? message : temp);
+                        write_client(game->player2->sock, game->awale.currentPlayer == 1 ? temp : message);
                         continue;
                      } 
                      
@@ -389,13 +394,13 @@ static void write_client(SOCKET sock, const char *buffer)
 }
 
 static void sendMenu(SOCKET sock) {
-   write_client(sock, "Bienvenue sur Awale, que voulez vous faire ?\n");
+   write_client(sock, "\nBienvenue sur Awale, que voulez vous faire ?\n");
    write_client(sock, "1. Voir la liste des pseudos en ligne\n");
    write_client(sock, "2. Défier un autre joueur\n");
    write_client(sock, "3. (Observer une partie)\n");
    write_client(sock, "4. Voir les règles du jeu\n");
    write_client(sock, "5. Voir l'historique des parties\n");
-   write_client(sock, "0. Se déconnecter\n");
+   write_client(sock, "21. Se déconnecter\n");
 }
 
 static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients) { 
@@ -423,11 +428,11 @@ static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients) {
    }
 };
 static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients) {
-   write_client(sock, "Voici la liste des Joueurs connectés que vous pouvez défier\n");
+   write_client(sock, "Voici la liste des Joueurs connectés que vous pouvez défier: \n\n");
    for(int i = 0; i < numberOfClients; i ++) {
       Client client = clients[i];
       if(client.sock == sock) continue;
-      if(client.state != IN_GAME_PLAYER_1 || client.state != IN_GAME_PLAYER_2 || client.state != OBSERVATEUR) {
+      if(client.state != IN_GAME_PLAYER_1 && client.state != IN_GAME_PLAYER_2 && client.state != OBSERVATEUR) {
          write_client(sock, client.name);
          write_client(sock, ": Disponible\n");
       }
