@@ -5,18 +5,12 @@
 ---------------------
    0  1  2  3  4  5
 
-Joueur 1: 
-Entrez un chiffre entre 1 et 6 (ou 7 et 12 en fonction du joueur)
-
-
-Menu: 
-1. Voir la liste des pseudos en ligne
-2. Défier un autre joueur
-3. (Observer une partie)
-4. Voir les règles du jeu
-5. Voir l'historique des parties
-0. Se déconnecter
-
-<Pseudo> veut vous défier, accepter (1) ou refuser (0)
-
 Une sauvegarde de partie est une suite de chiffre qui représente les différents coups (ie. les cases choisies à chaque tour);
+
+Trucs bizarres :
+- seveur se déconnecte après avoir lu les règles
+
+A faire :
+- implementer la sauvegarde
+- regler les trucs bizarres
+- rajouter des fonctionnalités

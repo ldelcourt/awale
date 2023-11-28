@@ -47,7 +47,7 @@ void printGameState(char * gameBoard, Awale game) {
       strcat(gameBoard, temp);
     }
   }
-  strcat(gameBoard,"|       Score\n| ");
+  strcat(gameBoard,"|   Score\n| ");
   for(int i = 0; i <6; i++) {
     if (game.gameState[i] < 10){
       snprintf(temp, sizeof(temp), " %d ", game.gameState[i]);
@@ -58,10 +58,15 @@ void printGameState(char * gameBoard, Awale game) {
     }
 
   }
-  strcat(gameBoard, "|       Player 1: ");
+  strcat(gameBoard, "|   ");
+  strcat(gameBoard, game.player1->playerName);
+  strcat(gameBoard, " : ");
+  snprintf(temp, sizeof(temp), " %d ", game.player1->score);
   snprintf(temp, sizeof(temp), " %d ", game.player1->score);
   strcat(gameBoard, temp);
-  strcat(gameBoard, "- Player 2: ");
+  strcat(gameBoard, "- ");
+  strcat(gameBoard, game.player2->playerName);
+  strcat(gameBoard, " : ");
   snprintf(temp, sizeof(temp), " %d ", game.player2->score);
   strcat(gameBoard, temp);
   strcat(gameBoard, "\n---------------------\n   0  1  2  3  4  5\n\n");
