@@ -3,8 +3,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "server2.h"
-#include "client2.h"
+#include "server.h"
 
 static void init(void)
 {
@@ -265,7 +264,7 @@ static void app(void)
                      } 
                      
                      /* Si le move est légal on joue et puis on envoie le plateau aux deux joueurs */
-                     if(playTurn(&(game->awale)) != true) {
+                     if(playTurn(tile, &(game->awale)) != true) {
                         printGameState(message, game->awale);
                         SOCKET currentPlayerSock = game->awale.currentPlayer == IN_GAME_PLAYER_1 ?
                            game->player1->sock : game->player2->sock;

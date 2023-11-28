@@ -10,7 +10,7 @@
 #define WAITING 6
 #define READING_RULES 7
 
-#include "server2.h"
+#include "server.h"
 #include "awale.h"
 
 typedef int CLIENT_STATE;

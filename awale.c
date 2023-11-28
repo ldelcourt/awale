@@ -139,6 +139,19 @@ int playTurn(int tile, Awale * game){
   return checkEndGame(game);
 }
 
+void endGameMessage(const char * message, Awale * game, int playerNumber) {
+  Player * player1 = game->player1;
+  Player * player2 = game->player2;
+  if (player1->score > player2->score) {
+    if(player1->playerNumber == playerNumber) strcat(message, "Congrats you win !\n");
+    if(player2->playerNumber == playerNumber) strcat(message, "Sorry you loose\n");
+  }
+  else {
+    if(player2->playerNumber == playerNumber) strcat(message, "Congrats you win !\n");
+    if(player1->playerNumber == playerNumber) strcat(message, "Sorry you loose\n");
+  }
+}
+
 void closeGame(Awale * game) {
   free(game->player1->playerName);
   free(game->player1);
@@ -147,7 +160,7 @@ void closeGame(Awale * game) {
   free(game->gameState);
 }
 
-
+/*
 int main() {
   printf("Bienvenue dans cette nouvelle partie Joueur 1 vous commencez !!\n");
   char* gameBoard = malloc(4096);
@@ -163,3 +176,4 @@ int main() {
   printf("Bravo ! Le joueur %d a gagné :-)\n", game.currentPlayer);
   closeGame(&game);
 }
+*/
