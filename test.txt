@@ -9,6 +9,8 @@ Une sauvegarde de partie est une suite de chiffre qui représente les différent
 
 Trucs bizarres :
 - seveur se déconnecte après avoir lu les règles
+- c'est écrit commande invalide après avoir envoyé un message avoir que c'est tout bon
+- afficher actualiser pas tout droit
 
 A faire :
 - implementer la sauvegarde
