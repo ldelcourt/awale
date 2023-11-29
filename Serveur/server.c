@@ -132,6 +132,51 @@ static void app(void)
                }
                else
                {
+                  /* Gestion d'une partie */
+                  if (client.state == IN_GAME_PLAYER_1 || client.state == IN_GAME_PLAYER_2) {
+                     Game * game = getGameByClient(&clients[i], games, numberOfGames);
+                     int tile = atoi(buffer);
+                     char message[4096];
+
+                     /* Si ce n'est pas au tour du joueur ou que le move n'est pas légal, on renvoie l'état du jeu au client */
+                     if (game->awale.currentPlayer != client.state || checkLegalMove(client.state, tile, &(game->awale)) == false) {
+                        printGameState(message, game->awale);
+                        strcat(message, "Vous ne pouvez pas choisir cette case, choisissez une autre case");
+                        strcat(message, game->awale.currentPlayer == 1 ? " entre 0 et 5\r\n" : " entre 6 et 11\r\n");
+                        if(game->awale.currentPlayer == 1){
+                           write_client(game->player1->sock,  message);
+                        } else {
+                           write_client(game->player2->sock,  message);
+                        }
+                        continue;
+                     } 
+                     
+                     /* Si le move est légal on joue et puis on envoie le plateau aux deux joueurs */
+                     if(playTurn(tile, &(game->awale)) != true) {
+                        printGameState(message, game->awale);
+                        SOCKET currentPlayerSock = game->awale.currentPlayer == IN_GAME_PLAYER_1 ?
+                           game->player1->sock : game->player2->sock;
+                        SOCKET otherPlayerSock = game->awale.currentPlayer != IN_GAME_PLAYER_1 ?
+                           game->player1->sock : game->player2->sock;
+                        char temp[4096]; 
+                        strcpy(temp, message);
+                        strcat(message, "A vous de jouer, choisissez une case");
+                        strcat(message, game->awale.currentPlayer == 1 ? " entre 0 et 5\r\n" : " entre 6 et 11\r\n");
+                        strcat(temp, "En attente du joueur en face\r\n");
+                        write_client(currentPlayerSock, message);
+                        write_client(otherPlayerSock, temp);
+                        continue;
+                     }
+                     
+                     /* Si c'est la fin de partie, on envoi le message pour savoir qui a gagné */
+                     char messageJoueur1[1024];
+                     char messageJoueur2[1024];
+                     endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1, false);
+                     endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2, false);
+                     write_client(game->player1->sock, messageJoueur1);
+                     write_client(game->player2->sock, messageJoueur2);
+                  }
+                  
                   /* Gestion d'un client dans le Menu */
                   if(client.state == IN_MENU) {
                      switch (atoi(buffer))
@@ -320,51 +365,6 @@ static void app(void)
                         write_client(client.sock, "Commande invalide, choisissez d'accepter (1) ou de refuser (2)\r\n\n");
                         break;
                      }
-                  }
-
-                  /* Gestion d'une partie */
-                  if (client.state == IN_GAME_PLAYER_1 || client.state == IN_GAME_PLAYER_2) {
-                     Game * game = getGameByClient(&clients[i], games, numberOfGames);
-                     int tile = atoi(buffer);
-                     char message[4096];
-
-                     /* Si ce n'est pas au tour du joueur ou que le move n'est pas légal, on renvoie l'état du jeu au client */
-                     if (game->awale.currentPlayer != client.state || checkLegalMove(client.state, tile, &(game->awale)) == false) {
-                        printGameState(message, game->awale);
-                        strcat(message, "Vous ne pouvez pas choisir cette case, choisissez une autre case");
-                        strcat(message, game->awale.currentPlayer == 1 ? " entre 0 et 5\r\n" : " entre 6 et 11\r\n");
-                        if(game->awale.currentPlayer == 1){
-                           write_client(game->player1->sock,  message);
-                        } else {
-                           write_client(game->player2->sock,  message);
-                        }
-                        continue;
-                     } 
-                     
-                     /* Si le move est légal on joue et puis on envoie le plateau aux deux joueurs */
-                     if(playTurn(tile, &(game->awale)) != true) {
-                        printGameState(message, game->awale);
-                        SOCKET currentPlayerSock = game->awale.currentPlayer == IN_GAME_PLAYER_1 ?
-                           game->player1->sock : game->player2->sock;
-                        SOCKET otherPlayerSock = game->awale.currentPlayer != IN_GAME_PLAYER_1 ?
-                           game->player1->sock : game->player2->sock;
-                        char temp[4096]; 
-                        strcpy(temp, message);
-                        strcat(message, "A vous de jouer, choisissez une case");
-                        strcat(message, game->awale.currentPlayer == 1 ? " entre 0 et 5\r\n" : " entre 6 et 11\r\n");
-                        strcat(temp, "En attente du joueur en face\r\n");
-                        write_client(game->player1->sock, game->awale.currentPlayer == 1 ? message : temp);
-                        write_client(game->player2->sock, game->awale.currentPlayer == 1 ? temp : message);
-                        continue;
-                     }
-                     
-                     /* Si c'est la fin de partie, on envoi le message pour savoir qui a gagné */
-                     char messageJoueur1[1024];
-                     char messageJoueur2[1024];
-                     endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1, false);
-                     endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2, false);
-                     write_client(game->player1->sock, messageJoueur1);
-                     write_client(game->player2->sock, messageJoueur2);
                   }
 
                }
