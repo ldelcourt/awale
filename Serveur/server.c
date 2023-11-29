@@ -123,7 +123,7 @@ static void app(void)
                      write_client(opponent->sock, message);
                      sendMenu(opponent->sock);
                      opponent->state = IN_MENU;
-                     closeGame(&(playerGame->awale));
+                     removeGame(playerGame, games, &numberOfGames);
                   }
                   closesocket(clients[i].sock);
                   remove_client(clients, i, &actual);
@@ -176,7 +176,7 @@ static void app(void)
                      write_client(game->player1->sock, messageJoueur1);
                      write_client(game->player2->sock, messageJoueur2);
                   }
-                  
+
                   /* Gestion d'un client dans le Menu */
                   if(client.state == IN_MENU) {
                      switch (atoi(buffer))
@@ -393,6 +393,18 @@ static void remove_client(Client *clients, int to_remove, int *actual)
    memmove(clients + to_remove, clients + to_remove + 1, (*actual - to_remove - 1) * sizeof(Client));
    /* number client - 1 */
    (*actual)--;
+}
+
+static void removeGame(Game * gameToRemove, Game * games, int * numberOfGame) {
+   closeGame(gameToRemove);
+   for(int i = 0; i < numberOfGame; i++) {
+      if(gameToRemove != &(games[i])) continue;
+      /* we remove the game in the array */
+      memmove(gameToRemove, gameToRemove + 1, (*numberOfGame - i - 1) * sizeof(Game));
+
+   }
+   /* number client - 1 */
+   (*numberOfGame)--;
 }
 
 static void send_message_to_all_clients(Client *clients, Client sender, int actual, const char *buffer, char from_server)

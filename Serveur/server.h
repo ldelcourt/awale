@@ -71,6 +71,8 @@ static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailableGamesList(SOCKET sock, Game * games, int numberOfGames);
 static void sendRules(SOCKET sock);
+
+static void removeGame(Game *gameToRemove, Game *games, int *numberOfGames);
 static Client * pseudoValid(const char* buffer, Client* clients, int nbClients, char * message);
 static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames);
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
