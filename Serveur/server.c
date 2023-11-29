@@ -207,8 +207,8 @@ static void app(void)
                      /* 4. Lire les règles du jeu */
                      case 4:
                         sendRules(client.sock);
-                        write_client(sock, "6. Retour menu\n");
-                        write_client(sock, "21. Se déconnecter\n");
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
                         clients[i].state = READING_RULES;
                         break;
                      /* 5. Envoyer un message a un joueur*/
@@ -294,27 +294,28 @@ static void app(void)
                               char fullMessage[1024];
                               snprintf(fullMessage, sizeof(fullMessage), "%s vous envoie : %s\n", client.name, message);
                               write_client(destinataire->sock, fullMessage);
-                              continue;
+                              write_client(client.sock, "\nMessage envoyé\n");
+                           } else {
+                              write_client(client.sock, "\nDestinataire pas trouvé\n");
                            }
-                           write_client(client.sock, "Message envoyé");
-                           sendMenu(client.sock);
-                           client.state = IN_MENU;
                         }
-                        write_client(client.sock, "Commande invalide ou joueur pas trouvé\n");
-                        continue;
-                     }
+                     } else {
+
                      switch (atoi(buffer))
                      {
                      case 6:
                         sendMenu(client.sock);
-                        client.state = IN_MENU;
+                        clients[i].state = IN_MENU;
                         break;
                      
                      default:
+                        write_client(client.sock, "Commande invalide\n\n");
+                        write_client(client.sock, "Pseudo Message pour envoyer un message\n");
                         write_client(client.sock, "6. Retour menu\n");
                         write_client(client.sock, "21. Se déconnecter\n");
       
                         break;
+                     }
                      }
                   }
 
@@ -322,6 +323,7 @@ static void app(void)
                   /* Gestion d'un joueur qui choisi de défier un autre joueur */
                   if(client.state == DEFYING) {
                      char messageRetour[1024];
+                     memset(messageRetour, 0, sizeof(messageRetour));
                      Client * adversaire = pseudoValid(buffer, clients, actual, messageRetour);
                      if(adversaire != NULL){
                         //Defier l'adversaire
@@ -596,6 +598,7 @@ static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames)
    game->player1->state = IN_GAME_PLAYER_1;
    game->player2->state = IN_GAME_PLAYER_2;
    char gameState[4096];
+   memset(gameState, 0, sizeof(gameState));
    printGameState(gameState, game->awale);
    write_client(game->player1->sock, gameState);
    write_client(game->player2->sock, gameState);

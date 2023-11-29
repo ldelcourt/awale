@@ -9,7 +9,7 @@
 #define DEFIED 5
 #define WAITING 6
 #define READING_RULES 7
-#define TCHATING 7
+#define TCHATING 8
 
 
 #include "server.h"
