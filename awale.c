@@ -168,21 +168,3 @@ void closeGame(Awale * game) {
   free(game->player2);
   free(game->gameState);
 }
-
-/*
-int main() {
-  printf("Bienvenue dans cette nouvelle partie Joueur 1 vous commencez !!\n");
-  char* gameBoard = malloc(4096);
-  Awale game = initGame("test", "me");
-
-  while (game.endOfGame == false || game.endOfGame == ERR_TILE_NUMBER) {
-    printGameState(gameBoard, game);
-    printf("%s",  gameBoard);
-    int tile = 0;
-    scanf("%d", &tile);
-    game.endOfGame = playTurn(tile, &game);
-  }
-  printf("Bravo ! Le joueur %d a gagné :-)\n", game.currentPlayer);
-  closeGame(&game);
-}
-*/
