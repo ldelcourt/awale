@@ -153,6 +153,7 @@ static void app(void)
                      
                      /* Si le move est légal on joue et puis on envoie le plateau aux deux joueurs */
                      if(playTurn(tile, &(game->awale)) != true) {
+                        addMove(tile, game);
                         printGameState(message, game->awale);
                         SOCKET currentPlayerSock = game->awale.currentPlayer == IN_GAME_PLAYER_1 ?
                            game->player1->sock : game->player2->sock;
@@ -173,8 +174,11 @@ static void app(void)
                      char messageJoueur2[1024];
                      endGameMessage(messageJoueur1, &(game->awale), IN_GAME_PLAYER_1, false);
                      endGameMessage(messageJoueur2, &(game->awale), IN_GAME_PLAYER_2, false);
+                     game->player1->state = IN_MENU;
+                     game->player2->state = IN_MENU;
                      write_client(game->player1->sock, messageJoueur1);
                      write_client(game->player2->sock, messageJoueur2);
+                     removeGame(game, games, &numberOfGames);
                   }
 
                   /* Gestion d'un client dans le Menu */
@@ -222,6 +226,17 @@ static void app(void)
                      /* 6. Retour au menu */
                      case 6:
                         sendMenu(client.sock);
+                        break;
+                     /* 7. Voir l'historique des parties */
+                     case 7: 
+                        clients[i].state = CONSULTING_HISTORY;
+                        char history[1024];
+                        memset(history, 0, sizeof(history));
+                        viewHistory(history);
+                        write_client(client.sock, "Voici l'historiques des parties\n\n");
+                        write_client(client.sock, history);
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
                         break;
                      
                      default:
@@ -367,6 +382,23 @@ static void app(void)
                      }
                   }
 
+                  /* Gestion du cas d'un joueur consulant l'historique des parties */
+                  if(client.state == CONSULTING_HISTORY) {
+                     switch (atoi(buffer))
+                     {
+                     case 6:
+                        sendMenu(client.sock);
+                        clients[i].state = IN_MENU;
+                        break;
+                     default:
+                        write_client(client.sock, "Commande invalide, veuillez réessayer\r\n\n");
+                        write_client(client.sock, "6. Retour menu\n");
+                        write_client(client.sock, "21. Se déconnecter\n");
+      
+                        break;
+                     }
+                  }
+
                }
                break;
             }
@@ -396,16 +428,85 @@ static void remove_client(Client *clients, int to_remove, int *actual)
 }
 
 static void removeGame(Game * gameToRemove, Game * games, int * numberOfGame) {
-   closeGame(gameToRemove);
-   for(int i = 0; i < numberOfGame; i++) {
+   /* Save the game in history */
+   saveGame(gameToRemove);
+
+   /* Free the appropriate memory */
+   free(gameToRemove->moves);
+   closeGame(&(gameToRemove->awale));
+
+   /* Remove the game from the array of games */
+   for(int i = 0; i < (*numberOfGame); i++) {
       if(gameToRemove != &(games[i])) continue;
-      /* we remove the game in the array */
       memmove(gameToRemove, gameToRemove + 1, (*numberOfGame - i - 1) * sizeof(Game));
 
    }
-   /* number client - 1 */
+
+   /* Decrease the number of total games */
    (*numberOfGame)--;
 }
+
+static void saveGame(Game *gameToSave)
+{
+    FILE *file = fopen("saved_games.txt", "a");
+
+    if (file == NULL)
+    {
+        perror("Error opening file for writing");
+        return;
+    }
+
+    /* Save player names, scores, and moves */ 
+    fprintf(file, "%s %s %d %d %d", gameToSave->player1->name, gameToSave->player2->name,
+            gameToSave->awale.player1->score, gameToSave->awale.player2->score, gameToSave->numberOfMoves);
+
+    for (int i = 0; i < gameToSave->numberOfMoves; i++)
+    {
+        fprintf(file, " %d", gameToSave->moves[i]);
+    }
+
+    fprintf(file, "\n");
+
+    fclose(file);
+}
+
+static void viewHistory(char *history) {
+    FILE *file = fopen("saved_games.txt", "r");
+
+    if (file == NULL)
+    {
+        perror("Error opening file for reading");
+        return;
+    }
+
+    char line[BUF_SIZE];
+    int gameNumber = 1;
+
+   /* Reads each line of the file */
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        char player1Name[BUF_SIZE];
+        char player2Name[BUF_SIZE];
+        int score1, score2, numberOfMoves;
+
+        if (sscanf(line, "%s %s %d %d %d", player1Name, player2Name, &score1, &score2, &numberOfMoves) == 5)
+        {
+            /* Append the game informations to the history variable */
+            sprintf(history + strlen(history), "%d. %s %d - %s %d : In %d moves\n",
+                    gameNumber, player1Name, score1, player2Name, score2, numberOfMoves);
+
+            gameNumber++;
+        }
+    }
+
+    fclose(file);
+}
+
+static void addMove(int move, Game *game) {
+   game->moves[game->numberOfMoves] = move;
+   game->numberOfMoves++;
+}
+
 
 static void send_message_to_all_clients(Client *clients, Client sender, int actual, const char *buffer, char from_server)
 {
@@ -495,6 +596,7 @@ static void sendMenu(SOCKET sock) {
    write_client(sock, "3. Voir les parties en cours\n");
    write_client(sock, "4. Voir les règles du jeu\n");
    write_client(sock, "5. Envoyer un message a un joueur\n");
+   write_client(sock, "7. Consulter l'historique des parties\n");
    write_client(sock, "21. Se déconnecter\n");
 }
 
@@ -579,6 +681,8 @@ static Game * createGame(Client * player1, Client * player2, Game* games, int * 
    games[(*numberOfGames)].player1 = player1;
    games[(*numberOfGames)].player2 = player2;
    games[(*numberOfGames)].awale = initGame(player1->name, player2->name);
+   games[(*numberOfGames)].moves = (History)malloc(sizeof(History) * 200);
+   games[(*numberOfGames)].numberOfMoves = 0;
 
    /* Increase the number of total games */
    (*numberOfGames)++;

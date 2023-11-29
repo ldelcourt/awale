@@ -36,6 +36,7 @@ typedef int SOCKET;
 typedef struct sockaddr_in SOCKADDR_IN;
 typedef struct sockaddr SOCKADDR;
 typedef struct in_addr IN_ADDR;
+typedef int * History;
 
 #endif
 
@@ -54,6 +55,8 @@ typedef struct {
   Awale awale;
   Client* player1;
   Client* player2;
+  History moves;
+  int numberOfMoves;
 } Game;
 
 static void init(void);
@@ -73,6 +76,9 @@ static void sendAvailableGamesList(SOCKET sock, Game * games, int numberOfGames)
 static void sendRules(SOCKET sock);
 
 static void removeGame(Game *gameToRemove, Game *games, int *numberOfGames);
+static void saveGame(Game * gameToSave);
+static void addMove(int move, Game * game);
+static void viewHistory(char *history);
 static Client * pseudoValid(const char* buffer, Client* clients, int nbClients, char * message);
 static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames);
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
