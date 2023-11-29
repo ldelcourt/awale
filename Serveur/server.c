@@ -247,14 +247,16 @@ static void app(void)
                   }
                   /* Gestion du cas d'un joueur qui observe une partie */
                   if(client.state == OBSERVATEUR) {
+
                      if((atoi(buffer) <= (numberOfGames + 1))&&((atoi(buffer) != 6)||(atoi(buffer) != 21))){
                         int numGameChoose = atoi(buffer)-1;
                         Game * gameChoose = &games[numGameChoose];
                         char message[4096];
                         printGameState(message, gameChoose->awale);
                         write_client(client.sock, message);
-                        char temp[4];
-                        snprintf(temp, sizeof(temp), " %d ", atoi(buffer));
+                        char temp[100];
+                        memset(temp, 0, sizeof(temp));
+                        strcat(temp, buffer);
                         strcat(temp, ". Actualiser\n");
                         write_client(client.sock, temp);
                         write_client(client.sock, "6. Retour menu\n");
@@ -375,7 +377,7 @@ static void app(void)
                         acceptGame(&clients[i], games, numberOfGames);
                         break;
                      case 2:
-                        refuseGame(&clients[i], games, numberOfGames);
+                        refuseGame(&clients[i], games, &numberOfGames);
                         break;
                      
                      default:
@@ -429,23 +431,35 @@ static void remove_client(Client *clients, int to_remove, int *actual)
    (*actual)--;
 }
 
-static void removeGame(Game * gameToRemove, Game * games, int * numberOfGame) {
+static void removeGame(Game *gameToRemove, Game *games, int *numberOfGames) {
    /* Save the game in history */
-   saveGame(gameToRemove);
+   if (gameToRemove->numberOfMoves > 0) saveGame(gameToRemove);
 
    /* Free the appropriate memory */
    free(gameToRemove->moves);
    closeGame(&(gameToRemove->awale));
 
-   /* Remove the game from the array of games */
-   for(int i = 0; i < (*numberOfGame); i++) {
-      if(gameToRemove != &(games[i])) continue;
-      memmove(gameToRemove, gameToRemove + 1, (*numberOfGame - i - 1) * sizeof(Game));
+   /* Find the position of the gameToRemove in the array */
+   int position = -1;
+   for (int i = 0; i < (*numberOfGames); i++) {
+      if (&(games[i]) == gameToRemove) {
+         position = i;
+         break;
+      }
+   }
 
+   if (position == -1) {
+      fprintf(stderr, "Game not found in the array.\n");
+      return;
+   }
+
+   /* Remove the game from the array of games */
+   for (int i = position; i < (*numberOfGames) - 1; i++) {
+      games[i] = games[i + 1];
    }
 
    /* Decrease the number of total games */
-   (*numberOfGame)--;
+   (*numberOfGames)--;
 }
 
 static void saveGame(Game *gameToSave)
@@ -705,19 +719,22 @@ static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames)
    memset(gameState, 0, sizeof(gameState));
    printGameState(gameState, game->awale);
    write_client(game->player1->sock, gameState);
+   write_client(game->player1->sock, "\nA vous de commencer, choisissez une case entre 0 et 5\n");
    write_client(game->player2->sock, gameState);
+   write_client(game->player2->sock, "\nEn attente de l'adversaire\n");
 
    return game;
 }
 
-static void refuseGame(Client * defiedClient, Game * games, int numberOfGames) {
-   Game * game = getGameByClient(defiedClient, games, numberOfGames);
+static void refuseGame(Client * defiedClient, Game * games, int *numberOfGames) {
+   Game * game = getGameByClient(defiedClient, games, (*numberOfGames));
    game->player1->state = IN_MENU;
    game->player2->state = IN_MENU;
    SOCKET defiyingClientSocket = game->player1 == defiedClient ? game->player2->sock : game->player1->sock; 
    write_client(defiyingClientSocket, "Your opponent declined the challenge #LOOSER");
    sendMenu(game->player1->sock);
    sendMenu(game->player2->sock);
+   removeGame(game, games, numberOfGames);
 }
 
 

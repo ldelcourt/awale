@@ -59,6 +59,8 @@ typedef struct {
   int numberOfMoves;
 } Game;
 
+
+/* Méthode pour la gestion des clients et des connections */
 static void init(void);
 static void end(void);
 static void app(void);
@@ -69,20 +71,23 @@ static void write_client(SOCKET sock, const char *buffer);
 static void send_message_to_all_clients(Client *clients, Client client, int actual, const char *buffer, char from_server);
 static void remove_client(Client *clients, int to_remove, int *actual);
 static void clear_clients(Client *clients, int actual);
+
+/* Méthodes d'envoi standard */
 static void sendMenu(SOCKET sock);
 static void sendPlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailablePlayersList(SOCKET sock, Client *clients, int numberOfClients);
 static void sendAvailableGamesList(SOCKET sock, Game * games, int numberOfGames);
 static void sendRules(SOCKET sock);
+static void viewHistory(char *history);
 
+/* Méthodes de gestions des parties */
 static void removeGame(Game *gameToRemove, Game *games, int *numberOfGames);
 static void saveGame(Game * gameToSave);
 static void addMove(int move, Game * game);
-static void viewHistory(char *history);
 static Client * pseudoValid(const char* buffer, Client* clients, int nbClients, char * message);
 static Game * createGame(Client * player1, Client * player2, Game* games, int * numberOfGames);
 static Game * acceptGame(Client * defiedClient, Game * games, int numberOfGames);
-static void refuseGame(Client * defiedClient, Game * games, int numberOfGames);
+static void refuseGame(Client * defiedClient, Game * games, int *numberOfGames);
 static Game * getGameByClient(Client * client, Game * games, int numberOfGames);
 
 #endif /* guard */
